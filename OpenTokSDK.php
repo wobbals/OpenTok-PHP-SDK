@@ -122,6 +122,7 @@ class OpenTokSDK {
 						foreach ($errors as $error) {
 							echo display_xml_error($error, $xml);
 						}
+						libxml_clear_errors();
             //throw new OpenTokException("Failed to create session: Invalid response from server");
         }
 
