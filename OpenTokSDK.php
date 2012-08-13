@@ -117,13 +117,14 @@ class OpenTokSDK {
 				libxml_use_internal_errors(true);
         $createSessionXML = simplexml_load_string($createSessionResult, 'SimpleXMLElement', LIBXML_NOCDATA);
         if(!$createSessionXML) {
+						$exceptionMessage = '';
 						$xml = explode("\n", $createSessionResult);
 						$errors = libxml_get_errors();
 						foreach ($errors as $error) {
-							echo display_xml_error($error, $xml);
+							$exceptionMessage .= display_xml_error($error, $xml);
 						}
 						libxml_clear_errors();
-            //throw new OpenTokException("Failed to create session: Invalid response from server");
+            throw new OpenTokException($exceptionMessage);
         }
 
         $errors = $createSessionXML->xpath("//error");
