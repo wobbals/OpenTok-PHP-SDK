@@ -114,9 +114,15 @@ class OpenTokSDK {
         $properties["api_key"] = $this->api_key;
 
         $createSessionResult = $this->_do_request("/session/create", $properties);
-        $createSessionXML = @simplexml_load_string($createSessionResult, 'SimpleXMLElement', LIBXML_NOCDATA);
+				libxml_use_internal_errors(true);
+        $createSessionXML = simplexml_load_string($createSessionResult, 'SimpleXMLElement', LIBXML_NOCDATA);
         if(!$createSessionXML) {
-            throw new OpenTokException("Failed to create session: Invalid response from server");
+						$xml = explode("\n", $createSessionResult);
+						$errors = libxml_get_errors();
+						foreach ($errors as $error) {
+							echo display_xml_error($error, $xml);
+						}
+            //throw new OpenTokException("Failed to create session: Invalid response from server");
         }
 
         $errors = $createSessionXML->xpath("//error");
@@ -231,3 +237,32 @@ class OpenTokSDK {
     }
     
 }
+
+function display_xml_error($error, $xml)
+{
+    $return  = $xml[$error->line - 1] . "\n";
+    $return .= str_repeat('-', $error->column) . "^\n";
+
+    switch ($error->level) {
+        case LIBXML_ERR_WARNING:
+            $return .= "Warning $error->code: ";
+            break;
+         case LIBXML_ERR_ERROR:
+            $return .= "Error $error->code: ";
+            break;
+        case LIBXML_ERR_FATAL:
+            $return .= "Fatal Error $error->code: ";
+            break;
+    }
+
+    $return .= trim($error->message) .
+               "\n  Line: $error->line" .
+               "\n  Column: $error->column";
+
+    if ($error->file) {
+        $return .= "\n  File: $error->file";
+    }
+
+    return "$return\n\n--------------------------------------------\n\n";
+}
+
